@@ -21,7 +21,7 @@ function Ability_Start () {
 }
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile1`, function (sprite, location) {
     Level += 1
-    game.splash("New ability. Fall at high speeds on a certain tile or wall to break it. Costs one heart if used effectively. You do not have to press space to use it.")
+    game.splash("1st ability. Stand over a tile and press space to destroy it. Costs one heart.")
 })
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     if (!(blockMenu.isMenuOpen())) {
@@ -77,6 +77,7 @@ info.onLifeZero(function () {
         . . . f f f f . . . . . 
         . . f f f f f f f . . . 
         `)
+    game.over(false, effects.dissolve)
 })
 controller.A.onEvent(ControllerButtonEvent.Repeated, function () {
     Ability_Start()
