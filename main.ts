@@ -1,5 +1,7 @@
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile1`, function (sprite, location) {
     tiles.setSmallTilemap(tilemap`level3`)
+    tiles.setSmallTilemap(tilemap`level3`)
+    music.smallCrash.play()
     tiles.placeOnRandomTile(mySprite, assets.tile`myTile11`)
     Level += 1
     game.showLongText("1st ability. Stand over a tile and press space to destroy it. Costs one heart.", DialogLayout.Center)
@@ -9,10 +11,14 @@ controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
         if (scene.backgroundColor() == 1) {
             if (mySprite.isHittingTile(CollisionDirection.Bottom)) {
                 mySprite.vy = -75
+                music.smallCrash.play()
                 for (let index = 0; index < 60; index++) {
                     transformSprites.changeRotation(mySprite, 6)
                     pause(5)
                 }
+                timer.after(175, function () {
+                    music.thump.play()
+                })
             } else {
                 scene.cameraShake(2, 150)
             }
@@ -39,6 +45,9 @@ scene.onHitWall(SpriteKind.Player, function (sprite, location) {
         }
     }
 })
+controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
+    music.sonar.play()
+})
 function SightOff () {
     if (!(blockMenu.isMenuOpen())) {
         if (scene.backgroundColor() == 13) {
@@ -57,10 +66,41 @@ function SightOff () {
         }
     }
 }
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile13`, function (sprite, location) {
+    tiles.setSmallTilemap(tilemap`level6`)
+    music.smallCrash.play()
+    tiles.placeOnRandomTile(mySprite, assets.tile`myTile11`)
+    Level += 1
+    game.showLongText("Ability SWITCHed. Press space to create a small defensive bubble to avoid spikes. Lasts 7 seconds. Costs one heart.", DialogLayout.Center)
+})
 function SetColors () {
-    color.setColor(1, color.rgb(60, 48, 31))
-    color.setColor(15, color.rgb(21, 14, 8))
+    color.setColor(1, color.rgb(222, 210, 170))
+    color.setColor(15, color.rgb(179, 129, 110))
+    color.setColor(6, color.rgb(199, 162, 107))
 }
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (Level == 3) {
+        mySprite2 = sprites.create(img`
+            . 1 1 1 1 1 1 . 
+            1 1 . . . . 1 1 
+            1 . . . . . . 1 
+            1 . . . . . . 1 
+            1 . . . . . . 1 
+            1 . . . . . . 1 
+            1 1 . . . . 1 1 
+            . 1 1 1 1 1 1 . 
+            `, SpriteKind.Player)
+        mySprite2.setPosition(130, 7)
+        mySprite2.setFlag(SpriteFlag.RelativeToCamera, true)
+        Shield = 1
+        info.changeLifeBy(-1)
+        timer.after(7000, function () {
+            scene.cameraShake(2, 200)
+            Shield = 0
+            mySprite2.destroy(effects.disintegrate, 500)
+        })
+    }
+})
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile12`, function (sprite, location) {
     console.log("1")
     tiles.setTileAt(location, assets.tile`transparency8`)
@@ -70,13 +110,18 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile12`, function (sprite, 
 controller.B.onEvent(ControllerButtonEvent.Repeated, function () {
     SightOn()
 })
+scene.onOverlapTile(SpriteKind.Player, assets.tile`tile17`, function (sprite, location) {
+    game.over(true, effects.dissolve)
+})
 info.onLifeZero(function () {
-    imagemorph.morph(mySprite, img`
-        . . . . . f . . . . . . 
-        . . . f f f f . . . . . 
-        . . f f f f f f f . . . 
-        `)
-    game.over(false, effects.dissolve)
+    timer.after(250, function () {
+        imagemorph.morph(mySprite, img`
+            . . . . . f . . . . . . 
+            . . . f f f f . . . . . 
+            . . f f f f f f f . . . 
+            `)
+        game.over(false, effects.dissolve)
+    })
 })
 function SightOn () {
     if (!(blockMenu.isMenuOpen())) {
@@ -97,13 +142,15 @@ controller.B.onEvent(ControllerButtonEvent.Released, function () {
     SightOff()
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile10`, function (sprite, location) {
-    console.log("1")
-    scene.cameraShake(2, 100)
-    console.log("2")
-    mySprite.vy = -10
-    timer.after(200, function () {
-        info.changeLifeBy(-1)
-    })
+    if (Shield == 0) {
+        console.log("1")
+        scene.cameraShake(2, 100)
+        console.log("2")
+        mySprite.vy = -20
+        timer.after(500, function () {
+            info.changeLifeBy(-1)
+        })
+    }
 })
 blockMenu.onMenuOptionSelected(function (option, index) {
     if (option == "About / How To Play") {
@@ -157,14 +204,18 @@ blockMenu.onMenuOptionSelected(function (option, index) {
     }
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile14`, function (sprite, location) {
-    console.log("1")
-    scene.cameraShake(2, 100)
-    console.log("2")
-    mySprite.vy = 10
-    timer.after(200, function () {
-        info.changeLifeBy(-1)
-    })
+    if (Shield == 0) {
+        console.log("1")
+        scene.cameraShake(2, 100)
+        console.log("2")
+        mySprite.vy = 20
+        timer.after(500, function () {
+            info.changeLifeBy(-1)
+        })
+    }
 })
+let Shield = 0
+let mySprite2: Sprite = null
 let Level = 0
 let mySprite: Sprite = null
 let textSprite: Sprite = null
@@ -426,6 +477,17 @@ animation.animationPresets(animation.bobbing),
 2000,
 true
 )
+game.onUpdate(function () {
+    if (!(blockMenu.isMenuOpen())) {
+        if (controller.left.isPressed()) {
+            music.footstep.playUntilDone()
+        } else if (controller.right.isPressed()) {
+            music.footstep.playUntilDone()
+        } else {
+            music.footstep.stop()
+        }
+    }
+})
 game.onUpdate(function () {
     if (!(blockMenu.isMenuOpen())) {
         if (Level == 1) {
