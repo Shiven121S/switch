@@ -1,10 +1,35 @@
+function Ability_Start () {
+    if (Level == 1) {
+        if (!(blockMenu.isMenuOpen())) {
+            if (scene.backgroundColor() == 1) {
+                scene.setBackgroundColor(13)
+                mySprite.setImage(img`
+                    1 1 1 1 
+                    1 . . 1 
+                    1 . . 1 
+                    1 1 1 1 
+                    `)
+                color.startFade(color.originalPalette, color.GrayScale, 150)
+                controller.moveSprite(mySprite, 0, 0)
+            }
+        }
+    } else if (Level == 2) {
+        if (!(blockMenu.isMenuOpen())) {
+        	
+        }
+    }
+}
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile1`, function (sprite, location) {
+    Level += 1
+    game.splash("New ability. Fall at high speeds on a certain tile or wall to break it. Costs one heart if used effectively. You do not have to press space to use it.")
+})
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     if (!(blockMenu.isMenuOpen())) {
         if (scene.backgroundColor() == 1) {
             if (mySprite.isHittingTile(CollisionDirection.Bottom)) {
                 mySprite.vy = -75
-                for (let index = 0; index < 120; index++) {
-                    transformSprites.changeRotation(mySprite, 3)
+                for (let index = 0; index < 60; index++) {
+                    transformSprites.changeRotation(mySprite, 6)
                     pause(5)
                 }
             } else {
@@ -13,48 +38,61 @@ controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
         }
     }
 })
-controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (!(blockMenu.isMenuOpen())) {
-        if (scene.backgroundColor() == 13) {
-            scene.setBackgroundColor(1)
-            mySprite.setImage(img`
-                f f f f 
-                f . . f 
-                f . . f 
-                f f f f 
-                `)
-            color.startFade(color.GrayScale, color.originalPalette, 100)
-            timer.after(125, function () {
-                color.setColor(1, color.rgb(250, 202, 184))
-                color.setColor(15, color.rgb(36, 34, 52))
-                controller.moveSprite(mySprite, 85, 0)
-            })
+function Ability_End () {
+    if (Level == 1) {
+        if (!(blockMenu.isMenuOpen())) {
+            if (scene.backgroundColor() == 13) {
+                scene.setBackgroundColor(1)
+                mySprite.setImage(img`
+                    f f f f 
+                    f . . f 
+                    f . . f 
+                    f f f f 
+                    `)
+                color.startFade(color.GrayScale, color.originalPalette, 100)
+                timer.after(125, function () {
+                    SetColors()
+                    controller.moveSprite(mySprite, 85, 0)
+                })
+            }
         }
     }
-})
-controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (!(blockMenu.isMenuOpen())) {
-        if (scene.backgroundColor() == 1) {
-            scene.setBackgroundColor(13)
-            mySprite.setImage(img`
-                1 1 1 1 
-                1 . . 1 
-                1 . . 1 
-                1 1 1 1 
-                `)
-            color.startFade(color.originalPalette, color.GrayScale, 150)
-            controller.moveSprite(mySprite, 0, 0)
-        }
-    }
-})
+}
+function SetColors () {
+    color.setColor(1, color.rgb(60, 48, 31))
+    color.setColor(15, color.rgb(21, 14, 8))
+}
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile12`, function (sprite, location) {
     console.log("1")
     tiles.setTileAt(location, assets.tile`transparency8`)
     console.log("2")
+    mySprite.say("Key accuired", 500)
+})
+controller.A.onEvent(ControllerButtonEvent.Released, function () {
+    Ability_End()
+})
+info.onLifeZero(function () {
+    imagemorph.morph(mySprite, img`
+        . . . . . f . . . . . . 
+        . . . f f f f . . . . . 
+        . . f f f f f f f . . . 
+        `)
+})
+controller.A.onEvent(ControllerButtonEvent.Repeated, function () {
+    Ability_Start()
+})
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile10`, function (sprite, location) {
+    console.log("1")
+    scene.cameraShake(2, 100)
+    console.log("2")
+    mySprite.vy = -10
+    timer.after(200, function () {
+        info.changeLifeBy(-1)
+    })
 })
 blockMenu.onMenuOptionSelected(function (option, index) {
     if (option == "About / How To Play") {
-        game.showLongText("You are a little bot that can see past what a normal human can see. You have been tasked to use your powers to explore the ruins of a underground civilization. Use the space bar and enter to SWITCH between vision modes and find hidden (doing this depletes your health slowly), keys, loot, and traps. Move with WASD. Climb walls by using space and A / D.", DialogLayout.Center)
+        game.showLongText("You are a little bot that can see past what a normal human can see. You have been tasked to use your powers to explore the ruins of a underground civilization. Use the space bar to SWITCH between vision modes and find hidden (doing this depletes your health slowly and you cannot move or jump when using the ability), keys, loot, and traps. Hold down space to use the ability and release it to return to normal vision. Move with WASD. Climb walls by using space and A / D.", DialogLayout.Center)
         game.setDialogFrame(img`
             ..ffffffffffffffffffff..
             .f11ff11ff11ff11ff11fff.
@@ -95,18 +133,18 @@ blockMenu.onMenuOptionSelected(function (option, index) {
                 `, SpriteKind.Player)
             controller.moveSprite(mySprite, 85, 0)
             tiles.placeOnRandomTile(mySprite, assets.tile`myTile11`)
-            mySprite.ay = 150
+            mySprite.ay = 250
+            info.setLife(5)
             color.clearFadeEffect()
             blockMenu.setControlsEnabled(false)
             blockMenu.closeMenu()
         })
     }
 })
-let Level = 0
 let mySprite: Sprite = null
+let Level = 0
 let textSprite: Sprite = null
-color.setColor(1, color.rgb(250, 202, 184))
-color.setColor(15, color.rgb(36, 34, 52))
+SetColors()
 scene.setBackgroundColor(15)
 imagemorph.morphBackground(img`
     1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
