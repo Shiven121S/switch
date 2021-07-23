@@ -1,27 +1,8 @@
-function Ability_Start () {
-    if (Level == 1) {
-        if (!(blockMenu.isMenuOpen())) {
-            if (scene.backgroundColor() == 1) {
-                scene.setBackgroundColor(13)
-                mySprite.setImage(img`
-                    1 1 1 1 
-                    1 . . 1 
-                    1 . . 1 
-                    1 1 1 1 
-                    `)
-                color.startFade(color.originalPalette, color.GrayScale, 150)
-                controller.moveSprite(mySprite, 0, 0)
-            }
-        }
-    } else if (Level == 2) {
-        if (!(blockMenu.isMenuOpen())) {
-        	
-        }
-    }
-}
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile1`, function (sprite, location) {
+    tiles.setSmallTilemap(tilemap`level3`)
+    tiles.placeOnRandomTile(mySprite, assets.tile`myTile11`)
     Level += 1
-    game.splash("1st ability. Stand over a tile and press space to destroy it. Costs one heart.")
+    game.showLongText("1st ability. Stand over a tile and press space to destroy it. Costs one heart.", DialogLayout.Center)
 })
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     if (!(blockMenu.isMenuOpen())) {
@@ -38,23 +19,41 @@ controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
         }
     }
 })
-function Ability_End () {
-    if (Level == 1) {
-        if (!(blockMenu.isMenuOpen())) {
-            if (scene.backgroundColor() == 13) {
-                scene.setBackgroundColor(1)
-                mySprite.setImage(img`
-                    f f f f 
-                    f . . f 
-                    f . . f 
-                    f f f f 
-                    `)
-                color.startFade(color.GrayScale, color.originalPalette, 100)
-                timer.after(125, function () {
-                    SetColors()
-                    controller.moveSprite(mySprite, 85, 0)
-                })
+scene.onHitWall(SpriteKind.Player, function (sprite, location) {
+    if (!(blockMenu.isMenuOpen())) {
+        if (Level == 2) {
+            if (mySprite.isHittingTile(CollisionDirection.Bottom)) {
+                if (controller.A.isPressed()) {
+                    tiles.setTileAt(location, assets.tile`transparency8`)
+                    timer.background(function () {
+                        tiles.setWallAt(location, false)
+                    })
+                    timer.background(function () {
+                        scene.cameraShake(2, 100)
+                    })
+                    timer.background(function () {
+                        info.changeLifeBy(-1)
+                    })
+                }
             }
+        }
+    }
+})
+function SightOff () {
+    if (!(blockMenu.isMenuOpen())) {
+        if (scene.backgroundColor() == 13) {
+            scene.setBackgroundColor(1)
+            mySprite.setImage(img`
+                f f f f 
+                f . . f 
+                f . . f 
+                f f f f 
+                `)
+            color.startFade(color.GrayScale, color.originalPalette, 100)
+            timer.after(125, function () {
+                SetColors()
+                controller.moveSprite(mySprite, 85, 0)
+            })
         }
     }
 }
@@ -66,10 +65,10 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile12`, function (sprite, 
     console.log("1")
     tiles.setTileAt(location, assets.tile`transparency8`)
     console.log("2")
-    mySprite.say("Key accuired", 500)
+    mySprite.say("Key accuired", 750)
 })
-controller.A.onEvent(ControllerButtonEvent.Released, function () {
-    Ability_End()
+controller.B.onEvent(ControllerButtonEvent.Repeated, function () {
+    SightOn()
 })
 info.onLifeZero(function () {
     imagemorph.morph(mySprite, img`
@@ -79,8 +78,23 @@ info.onLifeZero(function () {
         `)
     game.over(false, effects.dissolve)
 })
-controller.A.onEvent(ControllerButtonEvent.Repeated, function () {
-    Ability_Start()
+function SightOn () {
+    if (!(blockMenu.isMenuOpen())) {
+        if (scene.backgroundColor() == 1) {
+            scene.setBackgroundColor(13)
+            mySprite.setImage(img`
+                1 1 1 1 
+                1 . . 1 
+                1 . . 1 
+                1 1 1 1 
+                `)
+            color.startFade(color.originalPalette, color.GrayScale, 150)
+            controller.moveSprite(mySprite, 0, 0)
+        }
+    }
+}
+controller.B.onEvent(ControllerButtonEvent.Released, function () {
+    SightOff()
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile10`, function (sprite, location) {
     console.log("1")
@@ -93,7 +107,7 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile10`, function (sprite, 
 })
 blockMenu.onMenuOptionSelected(function (option, index) {
     if (option == "About / How To Play") {
-        game.showLongText("You are a little bot that can see past what a normal human can see. You have been tasked to use your powers to explore the ruins of a underground civilization. Use the space bar to SWITCH between vision modes and find hidden (doing this depletes your health slowly and you cannot move or jump when using the ability), keys, loot, and traps. Hold down space to use the ability and release it to return to normal vision. Move with WASD. Climb walls by using space and A / D.", DialogLayout.Center)
+        game.showLongText("You are a little bot that can see past what a normal human can see. You have been tasked to use your powers to explore the ruins of a underground civilization. Hold down enter to SWITCH over to extra sight, and release enter to return to normal vision. You cannot move or jump when holding down enter. Every level you SWITCH over to a new ability (sight is its own category.) There will be no extra ability in level one. Move with WASD. Find the key to be able to progress to the next level. Use your extra sight to find the keys, and beware of the hidden spikes.", DialogLayout.Center)
         game.setDialogFrame(img`
             ..ffffffffffffffffffff..
             .f11ff11ff11ff11ff11fff.
@@ -134,7 +148,7 @@ blockMenu.onMenuOptionSelected(function (option, index) {
                 `, SpriteKind.Player)
             controller.moveSprite(mySprite, 85, 0)
             tiles.placeOnRandomTile(mySprite, assets.tile`myTile11`)
-            mySprite.ay = 250
+            mySprite.ay = 170
             info.setLife(5)
             color.clearFadeEffect()
             blockMenu.setControlsEnabled(false)
@@ -142,8 +156,17 @@ blockMenu.onMenuOptionSelected(function (option, index) {
         })
     }
 })
-let mySprite: Sprite = null
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile14`, function (sprite, location) {
+    console.log("1")
+    scene.cameraShake(2, 100)
+    console.log("2")
+    mySprite.vy = 10
+    timer.after(200, function () {
+        info.changeLifeBy(-1)
+    })
+})
 let Level = 0
+let mySprite: Sprite = null
 let textSprite: Sprite = null
 SetColors()
 scene.setBackgroundColor(15)
@@ -413,6 +436,22 @@ game.onUpdate(function () {
                 tiles.setWallAt(tiles.getTileLocation(17, 14), false)
                 tiles.setTileAt(tiles.getTileLocation(15, 14), assets.tile`myTile7`)
             }
+        } else if (Level == 2) {
+            if (!(tiles.tileAtLocationEquals(tiles.getTileLocation(6, 10), assets.tile`myTile12`))) {
+                tiles.setTileAt(tiles.getTileLocation(18, 11), assets.tile`transparency8`)
+                tiles.setWallAt(tiles.getTileLocation(18, 11), false)
+                tiles.setTileAt(tiles.getTileLocation(17, 11), assets.tile`myTile4`)
+            }
+        }
+    }
+})
+game.onUpdateInterval(1500, function () {
+    if (!(blockMenu.isMenuOpen())) {
+        if (controller.B.isPressed()) {
+            scene.cameraShake(2, 200)
+            timer.background(function () {
+                info.changeLifeBy(-1)
+            })
         }
     }
 })
